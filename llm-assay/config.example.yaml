@@ -1,0 +1,77 @@
+# ---------------------------------------------------------------------------
+# Assay run configuration (default demo).
+#
+# This config runs out of the box on deterministic MOCK providers — no API
+# keys, no network. Mock numbers are placeholders to prove the pipeline; to
+# get real results, comment the mock models out and uncomment the real ones
+# below (and set the matching API keys in your environment / .env).
+#
+#   assay run --config config.yaml
+# ---------------------------------------------------------------------------
+
+models:
+  # --- Deterministic stand-ins (default) ---
+  - id: mock:smart
+    options:
+      seed: 7
+      latency_ms: 30
+      label_pool: ["Critical", "Major", "Minor"]
+      json_template:
+        product: "Paracetamol 500mg Tablets"
+        batch_number: "PCM-2024-118"
+        deviation_type: "temperature excursion"
+  - id: mock:weak
+    options:
+      seed: 99
+      latency_ms: 80
+      label_pool: ["Critical", "Major", "Minor"]
+      json_template:
+        product: "Unknown product"
+        batch_number: "N/A"
+        deviation_type: "deviation"
+
+  # --- Real models (uncomment + set API keys to use) ---
+  # - anthropic:claude-3-5-sonnet-latest
+  # - anthropic:claude-3-5-haiku-latest
+  # - openai:gpt-4o-mini
+  # - google:gemini-1.5-flash
+  # - huggingface:meta-llama/Meta-Llama-3-8B-Instruct
+
+datasets:
+  - path: datasets/gmp_severity_classification.jsonl
+    name: gmp_severity
+    system: >-
+      You are a GMP quality assurance reviewer. Classify the severity of the
+      described deviation. Respond with exactly one word: Critical, Major, or Minor.
+    scorers:
+      - type: exact_match
+        ignore_case: true
+
+  - path: datasets/sop_extraction.jsonl
+    name: sop_extraction
+    system: >-
+      Extract these fields from the deviation note and return ONLY valid JSON:
+      product, batch_number, deviation_type. Use the exact wording from the text.
+    scorers:
+      - type: json_match
+        keys: [product, batch_number, deviation_type]
+
+run:
+  concurrency: 6
+  repeats: 1
+  cache: true
+  cache_dir: .assay_cache
+  timeout_s: 60
+  max_retries: 3
+  max_tokens: 256
+  temperature: 0.0
+
+report:
+  formats: [terminal, json, markdown, html]
+  output_dir: reports
+
+# Optional: override or add per-model prices (USD per 1M tokens).
+# pricing:
+#   anthropic:claude-3-5-sonnet-latest:
+#     input_per_mtok: 3.00
+#     output_per_mtok: 15.00
