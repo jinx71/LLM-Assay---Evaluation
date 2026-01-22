@@ -1,0 +1,45 @@
+# ---------------------------------------------------------------------------
+# Assay config demonstrating LLM-as-judge on open-ended Q&A.
+#
+# The judge is itself a model, so this config needs a real provider and the
+# matching API key (it will not produce meaningful scores on mock). Example:
+#
+#   export ANTHROPIC_API_KEY=sk-ant-...
+#   export OPENAI_API_KEY=sk-...
+#   assay run --config config.judge.example.yaml
+# ---------------------------------------------------------------------------
+
+models:
+  - anthropic:claude-3-5-haiku-latest
+  - openai:gpt-4o-mini
+  - google:gemini-1.5-flash
+
+# A capable, independent model grades the candidate answers.
+judge:
+  id: anthropic:claude-3-5-sonnet-latest
+
+datasets:
+  - path: datasets/regulatory_qa.jsonl
+    name: regulatory_qa
+    system: >-
+      You are a pharmaceutical regulatory expert. Answer the question accurately
+      and concisely in two to four sentences.
+    scorers:
+      - type: llm_judge
+        threshold: 0.7
+        criteria: >-
+          Award full marks only if the answer is factually correct and covers
+          the key points in the reference. Penalise vague or incorrect claims.
+
+run:
+  concurrency: 4
+  repeats: 1
+  cache: true
+  timeout_s: 90
+  max_retries: 3
+  max_tokens: 400
+  temperature: 0.2
+
+report:
+  formats: [terminal, json, markdown, html]
+  output_dir: reports
