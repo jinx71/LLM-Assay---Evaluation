@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>LLM Assay — Evaluation Report</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --ink: #0b0e13;
+    --panel: #141a24;
+    --panel-2: #1b2330;
+    --line: #28313f;
+    --text: #e8eef6;
+    --muted: #8e9bad;
+    --faint: #5e6b7d;
+    --amber: #e8a33d;
+    --amber-dim: #6b5223;
+    --pass: #4cc38a;
+    --fail: #e5604d;
+    --mono: ui-monospace, "SFMono-Regular", "JetBrains Mono", "Menlo", monospace;
+    --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--ink);
+    color: var(--text);
+    font-family: var(--sans);
+    line-height: 1.5;
+    background-image:
+      linear-gradient(transparent 95%, rgba(232,163,61,0.04) 95%),
+      linear-gradient(90deg, transparent 95%, rgba(232,163,61,0.04) 95%);
+    background-size: 28px 28px;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 32px 20px 80px; }
+
+  header { border-bottom: 1px solid var(--line); padding-bottom: 22px; margin-bottom: 28px; }
+  .eyebrow {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.22em;
+    text-transform: uppercase; color: var(--amber); margin: 0 0 10px;
+  }
+  h1 { margin: 0; font-size: clamp(26px, 5vw, 40px); font-weight: 650; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); margin-top: 8px; font-size: 14px; }
+  .metabar {
+    display: flex; flex-wrap: wrap; gap: 18px 34px; margin-top: 18px;
+    font-family: var(--mono); font-size: 12.5px;
+  }
+  .metabar div span { color: var(--faint); display: block; font-size: 10.5px;
+    letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 3px; }
+  .metabar div b { color: var(--text); font-weight: 600; }
+
+  section { margin-top: 40px; }
+  h2 {
+    font-size: 13px; font-family: var(--mono); letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--muted); font-weight: 600;
+    margin: 0 0 16px; display: flex; align-items: center; gap: 12px;
+  }
+  h2::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+  /* Winner callout */
+  .winner {
+    display: grid; grid-template-columns: auto 1fr; gap: 22px; align-items: center;
+    background: linear-gradient(180deg, var(--panel-2), var(--panel));
+    border: 1px solid var(--amber-dim); border-radius: 14px; padding: 22px 24px;
+  }
+  .winner .medal {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em;
+    color: var(--amber); border: 1px solid var(--amber-dim); border-radius: 999px;
+    padding: 6px 12px; white-space: nowrap;
+  }
+  .winner .name { font-family: var(--mono); font-size: 20px; font-weight: 600; }
+  .winner .stats { display: flex; flex-wrap: wrap; gap: 6px 26px; margin-top: 8px;
+    font-family: var(--mono); font-size: 13px; color: var(--muted); }
+  .winner .stats b { color: var(--text); }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 760px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
+  .card h3 { margin: 0 0 12px; font-size: 13px; color: var(--text); font-weight: 600; }
+  .chart-box { position: relative; height: 280px; }
+
+  table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 13px; }
+  thead th {
+    text-align: right; color: var(--faint); font-weight: 600; font-size: 10.5px;
+    letter-spacing: 0.1em; text-transform: uppercase; padding: 0 12px 12px;
+    border-bottom: 1px solid var(--line); cursor: pointer; user-select: none;
+  }
+  thead th:first-child, tbody td:first-child { text-align: left; }
+  thead th.active { color: var(--amber); }
+  tbody td { padding: 11px 12px; border-bottom: 1px solid rgba(40,49,63,0.5); text-align: right; }
+  tbody tr:hover { background: rgba(232,163,61,0.04); }
+  .model-cell { color: var(--text); }
+  .rank { color: var(--faint); padding-right: 14px; }
+  .bar-cell { position: relative; }
+  .bar-cell .bar {
+    position: absolute; left: 12px; bottom: 6px; height: 3px;
+    background: var(--amber); border-radius: 2px; opacity: 0.7;
+  }
+  .pass { color: var(--pass); }
+  .fail { color: var(--fail); }
+
+  /* Record explorer */
+  .controls { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+  select, input[type="text"] {
+    background: var(--panel-2); color: var(--text); border: 1px solid var(--line);
+    border-radius: 8px; padding: 8px 10px; font-family: var(--mono); font-size: 12.5px;
+  }
+  input[type="text"] { flex: 1; min-width: 160px; }
+  .rec { border: 1px solid var(--line); border-radius: 10px; margin-bottom: 8px; overflow: hidden; }
+  .rec summary {
+    cursor: pointer; padding: 12px 14px; display: flex; flex-wrap: wrap; gap: 8px 16px;
+    align-items: center; font-family: var(--mono); font-size: 12.5px; list-style: none;
+  }
+  .rec summary::-webkit-details-marker { display: none; }
+  .rec summary .tag { color: var(--muted); }
+  .rec summary .score-badge { margin-left: auto; padding: 2px 9px; border-radius: 999px;
+    border: 1px solid var(--line); }
+  .rec .body { padding: 0 14px 14px; border-top: 1px solid var(--line); }
+  .rec .field { margin-top: 12px; }
+  .rec .field .lbl { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--faint); margin-bottom: 5px; }
+  .rec pre { margin: 0; white-space: pre-wrap; word-break: break-word;
+    background: var(--ink); border: 1px solid var(--line); border-radius: 8px;
+    padding: 11px 12px; font-family: var(--mono); font-size: 12.5px; color: var(--text); }
+
+  footer { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--line);
+    color: var(--faint); font-family: var(--mono); font-size: 11.5px; }
+  .nojs { color: var(--fail); font-family: var(--mono); font-size: 12px; }
+
+  :focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">LLM Assay · Evaluation Report</p>
+    <h1>Model leaderboard</h1>
+    <p class="sub">Quality, latency, and cost measured on domain tasks — ranked by mean score.</p>
+    <div class="metabar">
+      <div><span>Datasets</span><b>gmp_severity, sop_extraction</b></div>
+      <div><span>Evaluations</span><b>50</b></div>
+      <div><span>Repeats</span><b>1</b></div>
+      <div><span>Duration</span><b>0.0s</b></div>
+      
+    </div>
+  </header>
+
+  
+  
+  <div class="winner">
+    <div class="medal">RANK 01</div>
+    <div>
+      <div class="name">mock:smart</div>
+      <div class="stats">
+        <span>score <b>26.7%</b></span>
+        <span>pass <b>24.0%</b></span>
+        <span>mean <b>32 ms</b></span>
+        <span>cost <b>$0.0000</b></span>
+      </div>
+    </div>
+  </div>
+  
+
+  <section>
+    <h2>Quality vs cost</h2>
+    <div class="card">
+      <h3>Higher and to the left is better — most quality per dollar</h3>
+      <div class="chart-box"><canvas id="scatter"></canvas></div>
+      <p class="nojs" id="nojs" hidden>Charts need an internet connection to load Chart.js. The tables below work offline.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Leaderboard</h2>
+    <table id="board">
+      <thead>
+        <tr>
+          <th data-key="rank">#</th>
+          <th data-key="model" style="text-align:left">Model</th>
+          <th data-key="mean_score" class="active">Score</th>
+          <th data-key="pass_rate">Pass</th>
+          <th data-key="mean_latency_ms">Mean ms</th>
+          <th data-key="p95_latency_ms">p95 ms</th>
+          <th data-key="total_cost_usd">Cost $</th>
+          <th data-key="error_rate">Err</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+        <tr>
+          <td class="rank">1</td>
+          <td class="model-cell" style="text-align:left">mock:smart</td>
+          <td class="bar-cell">26.7%<span class="bar" style="width:32.0px"></span></td>
+          <td>24.0%</td>
+          <td>32</td>
+          <td>41</td>
+          <td>0.0000</td>
+          <td class="pass">0%</td>
+        </tr>
+        
+        <tr>
+          <td class="rank">2</td>
+          <td class="model-cell" style="text-align:left">mock:weak</td>
+          <td class="bar-cell">8.0%<span class="bar" style="width:9.6px"></span></td>
+          <td>8.0%</td>
+          <td>83</td>
+          <td>109</td>
+          <td>0.0000</td>
+          <td class="pass">0%</td>
+        </tr>
+        
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>By task</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>Mean score per dataset</h3>
+        <div class="chart-box"><canvas id="byDataset"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Mean latency (ms)</h3>
+        <div class="chart-box"><canvas id="latency"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Per-case explorer</h2>
+    <div class="controls">
+      <select id="fModel"><option value="">All models</option></select>
+      <select id="fDataset"><option value="">All datasets</option></select>
+      <select id="fStatus">
+        <option value="">All results</option>
+        <option value="pass">Passed only</option>
+        <option value="fail">Failed only</option>
+        <option value="error">Errors only</option>
+      </select>
+      <input type="text" id="fSearch" placeholder="Search case id or output…" />
+    </div>
+    <div id="records"></div>
+  </section>
+
+  <footer>
+    Generated 2026-06-18 05:03 · LLM Assay · 50 evaluations.
+    Mock-provider numbers are placeholders; supply real API keys for genuine results.
+  </footer>
+</div>
+
+<script id="run-data" type="application/json">{"meta": {"models": ["mock:smart", "mock:weak"], "judge": null, "repeats": 1, "concurrency": 6, "total_evaluations": 50}, "started_at": "2026-06-18T05:03:16.491446+00:00", "finished_at": "2026-06-18T05:03:16.500736+00:00", "duration_s": 0.009, "datasets": ["gmp_severity", "sop_extraction"], "leaderboard": [{"model": "mock:smart", "evaluations": 25, "mean_score": 0.2667, "pass_rate": 0.24, "mean_latency_ms": 32.1, "p95_latency_ms": 41.3, "total_cost_usd": 0.0, "error_rate": 0.0}, {"model": "mock:weak", "evaluations": 25, "mean_score": 0.08, "pass_rate": 0.08, "mean_latency_ms": 83.0, "p95_latency_ms": 108.7, "total_cost_usd": 0.0, "error_rate": 0.0}], "cells": [{"model": "mock:smart", "dataset": "gmp_severity", "evaluations": 15, "mean_score": 0.4, "pass_rate": 0.4, "mean_latency_ms": 32.2, "p95_latency_ms": 40.0, "total_cost_usd": 0.0, "error_rate": 0.0, "scorer_means": {"exact_match": 0.4}}, {"model": "mock:smart", "dataset": "sop_extraction", "evaluations": 10, "mean_score": 0.0667, "pass_rate": 0.0, "mean_latency_ms": 32.1, "p95_latency_ms": 42.0, "total_cost_usd": 0.0, "error_rate": 0.0, "scorer_means": {"json_match": 0.0667}}, {"model": "mock:weak", "dataset": "gmp_severity", "evaluations": 15, "mean_score": 0.1333, "pass_rate": 0.1333, "mean_latency_ms": 81.6, "p95_latency_ms": 108.8, "total_cost_usd": 0.0, "error_rate": 0.0, "scorer_means": {"exact_match": 0.1333}}, {"model": "mock:weak", "dataset": "sop_extraction", "evaluations": 10, "mean_score": 0.0, "pass_rate": 0.0, "mean_latency_ms": 85.0, "p95_latency_ms": 103.7, "total_cost_usd": 0.0, "error_rate": 0.0, "scorer_means": {"json_match": 0.0}}], "records": [{"model": "mock:smart", "dataset": "gmp_severity", "test_case_id": "sev-01", "repeat": 0, "output": "Critical", "error": null, "latency_ms": 38.0, "input_tokens": 41, "output_tokens": 2, "cost_usd": 0.0, "scores": [{"scorer": "exact_match", "score": 1.0, "passed": true, "detail": ""}]}, {"model": "mock:weak", "dataset": "gmp_severity", "test_case_id": "sev-01", "repeat": 0, "output": "Major", "error": null, "latency_ms": 59.4, "input_tokens": 41, "output_tokens": 1, "cost_usd": 0.0, "scores": [{"scorer": "exact_match", "score": 0.0, "passed": false, "detail": "expected 'critical', got 'major'"}]}, {"model": "mock:smart", "dataset": "gmp_severity", "test_case_id": "sev-02", "repeat": 0, "output": "Major", "error": null, "latency_ms": 31.6, "input_tokens": 47, "output_tokens": 1, "cost_usd": 0.0, "scores": [{"scorer": "exact_match", "score": 0.0, "passed": false, "detail": "expected 'minor', got 'major'"}]}, {"model": "mock:weak", "dataset": "gmp_severity", "test_case_id": "sev-02", "repeat": 0, "output": "Critical", "error": null, "latency_ms": 65.6, "input_tokens": 47, "output_tokens": 2, "cost_usd": 0.0, "scores": [{"scorer": "exact_match", "score": 0.0, "passed": false, "detail": "expected 'minor', got 'critical'"}]}, {"model": "mock:smart", "dataset": "gmp_severity", "test_case_id": "sev-03", "repeat": 0, "output": "Critical", "error": null, "latency_ms": 35.1, "input_tokens": 46, "output_tokens": 2, "cost_usd": 0.0, "scores": [{"scorer": "exact_match", "score": 0.0, "passed": false, "detail": "expected 'major', got 'critical'"}]}, {"model": "mock:weak", "dataset": "gmp_severity", "test_case_id": "sev-03", "repeat": 0, "output": "Critical", "error": null, "latency_ms": 95.6, "input_tokens": 46, "output_tokens": 2, "cost_usd": 0.0, "scores": [{"scorer": "exact_match", "score": 0.0, "passed": false, "detail": "expected 'major', got 'critical'"}]}, {"model": "mock:smart", "dataset": "gmp_severity", "test_case_id": "sev-04", "repeat": 0, "output": "Major", "error": null, "latency_ms": 28.8, "input_tokens": 40, "output_tokens": 1, "cost_usd": 0.0, "scores": [{"scorer": "exact_match", "score": 0.0, "passed": false, "detail": "expected 'critical', got 'major'"}]}, {"model": "mock:weak", "dataset": "gmp_severity", "test_case_id": "sev-04", "repeat": 0, "output": "Major", "error": null, "latency_ms": 112.0, "input_tokens": 40, "output_tokens": 1, "cost_usd": 0.0, "scores": [{"scorer": "exact_match", "score": 0.0, "passed": false, "detail": "expected 'critical', got 'major'"}]}, {"model": "mock:smart", "dataset": "gmp_severity", "test_case_id": "sev-05", "repeat": 0, "output": "Major", "error": null, "latency_ms": 24.2, "input_tokens": 37, "output_tokens": 1, "cost_usd": 0.0, "scores": [{"scorer": "exact_match", "score": 0.0, "passed": false, "detail": "expected 'minor', got 'major'"}]}, {"model": "mock:weak", "dataset": "gmp_severity", "test_case_id": "sev-05", "repeat": 0, "output": "Critical", "error": null, "latency_ms": 104.1, "input_tokens": 37, "output_tokens": 2, "cost_usd": 0.0, "scores": [{"scorer": "exact_match", "score": 0.0, "passed": false, "detail": "expected 'minor', got 'critical'"}]}, {"model": "mock:smart", "dataset": "gmp_severity", "test_case_id": "sev-06", "repeat": 0, "output": "Major", "error": null, "latency_ms": 29.1, "input_tokens": 48, "output_tokens": 1, "cost_usd": 0.0, "scores": [{"scorer": "exact_match", "score": 1.0, "passed": true, "detail": ""}]}, {"model": "mock:weak", "dataset": "gmp_severity", "test_case_id": "sev-06", "repeat": 0, "output": "Minor", "error": null, "latency_ms": 90.7, "input_tokens": 48, "output_tokens": 1, "cost_usd": 0.0, "scores": [{"scorer": "exact_match", "score": 0.0, "passed": false, "detail": "expected 'major', got 'minor'"}]}, {"model": "mock:smart", "dataset": "gmp_severity", "test_case_id": "sev-07", "repeat": 0, "output": "Critical", "error": null, "latency_ms": 33.4, "input_tokens": 36, "output_tokens": 2, "cost_usd": 0.0, "scores": [{"scorer": "exact_match", "score": 1.0, "passed": true, "detail": ""}]}, {"model": "mock:weak", "dataset": "gmp_severity", "test_case_id": "sev-07", "repeat": 0, "output": "Major", "error": null, "latency_ms": 74.9, "input_tokens": 36, "output_tokens": 1, "cost_usd": 0.0, "scores": [{"scorer": "exact_match", "score": 0.0, "passed": false, "detail": "expected 'critical', got 'major'"}]}, {"model": "mock:smart", "dataset": "gmp_severity", "test_case_id": "sev-08", "repeat": 0, "output": "Major", "error": null, "latency_ms": 27.8, "input_tokens": 48, "output_tokens": 1, "cost_usd": 0.0, "scores": [{"scorer": "exact_match", "score": 1.0, "passed": true, "detail": ""}]}, {"model": "mock:weak", "dataset": "gmp_severity", "test_case_id": "sev-08", "repeat": 0, "output": "Major", "error": null, "latency_ms": 88.8, "input_tokens": 48, "output_tokens": 1, "cost_usd": 0.0, "scores": [{"scorer": "exact_match", "score": 1.0, "passed": true, "detail": ""}]}, {"model": "mock:smart", "dataset": "gmp_severity", "test_case_id": "sev-09", "repeat": 0, "output": "Minor", "error": null, "latency_ms": 39.7, "input_tokens": 40, "output_tokens": 1, "cost_usd": 0.0, "scores": [{"scorer": "exact_match", "score": 1.0, "passed": true, "detail": ""}]}, {"model": "mock:weak", "dataset": "gmp_severity", "test_case_id": "sev-09", "repeat": 0, "output": "Major", "error": null, "latency_ms": 57.5, "input_tokens": 40, "output_tokens": 1, "cost_usd": 0.0, "scores": [{"scorer": "exact_match", "score": 0.0, "passed": false, "detail": "expected 'minor', got 'major'"}]}, {"model": "mock:smart", "dataset": "gmp_severity", "test_case_id": "sev-10", "repeat": 0, "output": "Critical", "error": null, "latency_ms": 31.4, "input_tokens": 45, "output_tokens": 2, "cost_usd": 0.0, "scores": [{"scorer": "exact_match", "score": 1.0, "passed": true, "detail": ""}]}, {"model": "mock:weak", "dataset": "gmp_severity", "test_case_id": "sev-10", "repeat": 0, "output": "Minor", "error": null, "latency_ms": 107.5, "input_tokens": 45, "output_tokens": 1, "cost_usd": 0.0, "scores": [{"scorer": "exact_match", "score": 0.0, "passed": false, "detail": "expected 'critical', got 'minor'"}]}, {"model": "mock:smart", "dataset": "gmp_severity", "test_case_id": "sev-11", "repeat": 0, "output": "Critical", "error": null, "latency_ms": 40.7, "input_tokens": 40, "output_tokens": 2, "cost_usd": 0.0, "scores": [{"scorer": "exact_match", "score": 0.0, "passed": false, "detail": "expected 'major', got 'critical'"}]}, {"model": "mock:weak", "dataset": "gmp_severity", "test_case_id": "sev-11", "repeat": 0, "output": "Critical", "error": null, "latency_ms": 57.5, "input_tokens": 40, "output_tokens": 2, "cost_usd": 0.0, "scores": [{"scorer": "exact_match", "score": 0.0, "passed": false, "detail": "expected 'major', got 'critical'"}]}, {"model": "mock:smart", "dataset": "gmp_severity", "test_case_id": "sev-12", "repeat": 0, "output": "Major", "error": null, "latency_ms": 39.8, "input_tokens": 42, "output_tokens": 1, "cost_usd": 0.0, "scores": [{"scorer": "exact_match", "score": 0.0, "passed": false, "detail": "expected 'minor', got 'major'"}]}, {"model": "mock:weak", "dataset": "gmp_severity", "test_case_id": "sev-12", "repeat": 0, "output": "Minor", "error": null, "latency_ms": 79.4, "input_tokens": 42, "output_tokens": 1, "cost_usd": 0.0, "scores": [{"scorer": "exact_match", "score": 1.0, "passed": true, "detail": ""}]}, {"model": "mock:smart", "dataset": "gmp_severity", "test_case_id": "sev-13", "repeat": 0, "output": "Minor", "error": null, "latency_ms": 35.3, "input_tokens": 48, "output_tokens": 1, "cost_usd": 0.0, "scores": [{"scorer": "exact_match", "score": 0.0, "passed": false, "detail": "expected 'major', got 'minor'"}]}, {"model": "mock:weak", "dataset": "gmp_severity", "test_case_id": "sev-13", "repeat": 0, "output": "Minor", "error": null, "latency_ms": 62.0, "input_tokens": 48, "output_tokens": 1, "cost_usd": 0.0, "scores": [{"scorer": "exact_match", "score": 0.0, "passed": false, "detail": "expected 'major', got 'minor'"}]}, {"model": "mock:smart", "dataset": "gmp_severity", "test_case_id": "sev-14", "repeat": 0, "output": "Major", "error": null, "latency_ms": 22.7, "input_tokens": 43, "output_tokens": 1, "cost_usd": 0.0, "scores": [{"scorer": "exact_match", "score": 0.0, "passed": false, "detail": "expected 'minor', got 'major'"}]}, {"model": "mock:weak", "dataset": "gmp_severity", "test_case_id": "sev-14", "repeat": 0, "output": "Major", "error": null, "latency_ms": 67.1, "input_tokens": 43, "output_tokens": 1, "cost_usd": 0.0, "scores": [{"scorer": "exact_match", "score": 0.0, "passed": false, "detail": "expected 'minor', got 'major'"}]}, {"model": "mock:smart", "dataset": "gmp_severity", "test_case_id": "sev-15", "repeat": 0, "output": "Minor", "error": null, "latency_ms": 25.0, "input_tokens": 45, "output_tokens": 1, "cost_usd": 0.0, "scores": [{"scorer": "exact_match", "score": 0.0, "passed": false, "detail": "expected 'critical', got 'minor'"}]}, {"model": "mock:weak", "dataset": "gmp_severity", "test_case_id": "sev-15", "repeat": 0, "output": "Major", "error": null, "latency_ms": 102.8, "input_tokens": 45, "output_tokens": 1, "cost_usd": 0.0, "scores": [{"scorer": "exact_match", "score": 0.0, "passed": false, "detail": "expected 'critical', got 'major'"}]}, {"model": "mock:smart", "dataset": "sop_extraction", "test_case_id": "ext-01", "repeat": 0, "output": "{\"product\": \"UNKNOWN\", \"batch_number\": \"PCM-2024-118\", \"deviation_type\": \"temperature excursion\"}", "error": null, "latency_ms": 26.2, "input_tokens": 30, "output_tokens": 24, "cost_usd": 0.0, "scores": [{"scorer": "json_match", "score": 0.6666666666666666, "passed": false, "detail": "2/3 fields (missed: product)"}]}, {"model": "mock:weak", "dataset": "sop_extraction", "test_case_id": "ext-01", "repeat": 0, "output": "{\"product\": \"Unknown product\", \"batch_number\": \"N/A\", \"deviation_type\": \"deviation\"}", "error": null, "latency_ms": 70.6, "input_tokens": 30, "output_tokens": 21, "cost_usd": 0.0, "scores": [{"scorer": "json_match", "score": 0.0, "passed": false, "detail": "0/3 fields (missed: product, batch_number, deviation_type)"}]}, {"model": "mock:smart", "dataset": "sop_extraction", "test_case_id": "ext-02", "repeat": 0, "output": "{\"product\": \"UNKNOWN\", \"batch_number\": \"UNKNOWN\", \"deviation_type\": \"temperature excursion\"}", "error": null, "latency_ms": 36.8, "input_tokens": 35, "output_tokens": 23, "cost_usd": 0.0, "scores": [{"scorer": "json_match", "score": 0.0, "passed": false, "detail": "0/3 fields (missed: product, batch_number, deviation_type)"}]}, {"model": "mock:weak", "dataset": "sop_extraction", "test_case_id": "ext-02", "repeat": 0, "output": "{\"product\": \"Unknown product\", \"batch_number\": \"UNKNOWN\", \"deviation_type\": \"deviation\"}", "error": null, "latency_ms": 92.1, "input_tokens": 35, "output_tokens": 22, "cost_usd": 0.0, "scores": [{"scorer": "json_match", "score": 0.0, "passed": false, "detail": "0/3 fields (missed: product, batch_number, deviation_type)"}]}, {"model": "mock:smart", "dataset": "sop_extraction", "test_case_id": "ext-03", "repeat": 0, "output": "{\"product\": \"Paracetamol 500mg Tablets\", \"batch_number\": \"PCM-2024-118\", \"deviation_type\": \"temperature excursion\"}", "error": null, "latency_ms": 42.5, "input_tokens": 30, "output_tokens": 28, "cost_usd": 0.0, "scores": [{"scorer": "json_match", "score": 0.0, "passed": false, "detail": "0/3 fields (missed: product, batch_number, deviation_type)"}]}, {"model": "mock:weak", "dataset": "sop_extraction", "test_case_id": "ext-03", "repeat": 0, "output": "{\"product\": \"Unknown product\", \"batch_number\": \"N/A\", \"deviation_type\": \"deviation\"}", "error": null, "latency_ms": 109.0, "input_tokens": 30, "output_tokens": 21, "cost_usd": 0.0, "scores": [{"scorer": "json_match", "score": 0.0, "passed": false, "detail": "0/3 fields (missed: product, batch_number, deviation_type)"}]}, {"model": "mock:smart", "dataset": "sop_extraction", "test_case_id": "ext-04", "repeat": 0, "output": "{\"product\": \"Paracetamol 500mg Tablets\", \"batch_number\": \"UNKNOWN\", \"deviation_type\": \"temperature excursion\"}", "error": null, "latency_ms": 21.2, "input_tokens": 28, "output_tokens": 27, "cost_usd": 0.0, "scores": [{"scorer": "json_match", "score": 0.0, "passed": false, "detail": "0/3 fields (missed: product, batch_number, deviation_type)"}]}, {"model": "mock:weak", "dataset": "sop_extraction", "test_case_id": "ext-04", "repeat": 0, "output": "{\"product\": \"Unknown product\", \"batch_number\": \"N/A\", \"deviation_type\": \"deviation\"}", "error": null, "latency_ms": 90.3, "input_tokens": 28, "output_tokens": 21, "cost_usd": 0.0, "scores": [{"scorer": "json_match", "score": 0.0, "passed": false, "detail": "0/3 fields (missed: product, batch_number, deviation_type)"}]}, {"model": "mock:smart", "dataset": "sop_extraction", "test_case_id": "ext-05", "repeat": 0, "output": "{\"product\": \"Paracetamol 500mg Tablets\", \"batch_number\": \"PCM-2024-118\", \"deviation_type\": \"UNKNOWN\"}", "error": null, "latency_ms": 40.8, "input_tokens": 33, "output_tokens": 25, "cost_usd": 0.0, "scores": [{"scorer": "json_match", "score": 0.0, "passed": false, "detail": "0/3 fields (missed: product, batch_number, deviation_type)"}]}, {"model": "mock:weak", "dataset": "sop_extraction", "test_case_id": "ext-05", "repeat": 0, "output": "{\"product\": \"Unknown product\", \"batch_number\": \"N/A\", \"deviation_type\": \"deviation\"}", "error": null, "latency_ms": 81.8, "input_tokens": 33, "output_tokens": 21, "cost_usd": 0.0, "scores": [{"scorer": "json_match", "score": 0.0, "passed": false, "detail": "0/3 fields (missed: product, batch_number, deviation_type)"}]}, {"model": "mock:smart", "dataset": "sop_extraction", "test_case_id": "ext-06", "repeat": 0, "output": "{\"product\": \"Paracetamol 500mg Tablets\", \"batch_number\": \"PCM-2024-118\", \"deviation_type\": \"temperature excursion\"}", "error": null, "latency_ms": 35.3, "input_tokens": 23, "output_tokens": 28, "cost_usd": 0.0, "scores": [{"scorer": "json_match", "score": 0.0, "passed": false, "detail": "0/3 fields (missed: product, batch_number, deviation_type)"}]}, {"model": "mock:weak", "dataset": "sop_extraction", "test_case_id": "ext-06", "repeat": 0, "output": "{\"product\": \"Unknown product\", \"batch_number\": \"N/A\", \"deviation_type\": \"deviation\"}", "error": null, "latency_ms": 94.6, "input_tokens": 23, "output_tokens": 21, "cost_usd": 0.0, "scores": [{"scorer": "json_match", "score": 0.0, "passed": false, "detail": "0/3 fields (missed: product, batch_number, deviation_type)"}]}, {"model": "mock:smart", "dataset": "sop_extraction", "test_case_id": "ext-07", "repeat": 0, "output": "{\"product\": \"Paracetamol 500mg Tablets\", \"batch_number\": \"PCM-2024-118\", \"deviation_type\": \"temperature excursion\"}", "error": null, "latency_ms": 22.7, "input_tokens": 30, "output_tokens": 28, "cost_usd": 0.0, "scores": [{"scorer": "json_match", "score": 0.0, "passed": false, "detail": "0/3 fields (missed: product, batch_number, deviation_type)"}]}, {"model": "mock:weak", "dataset": "sop_extraction", "test_case_id": "ext-07", "repeat": 0, "output": "{\"product\": \"Unknown product\", \"batch_number\": \"N/A\", \"deviation_type\": \"deviation\"}", "error": null, "latency_ms": 52.8, "input_tokens": 30, "output_tokens": 21, "cost_usd": 0.0, "scores": [{"scorer": "json_match", "score": 0.0, "passed": false, "detail": "0/3 fields (missed: product, batch_number, deviation_type)"}]}, {"model": "mock:smart", "dataset": "sop_extraction", "test_case_id": "ext-08", "repeat": 0, "output": "{\"product\": \"Paracetamol 500mg Tablets\", \"batch_number\": \"PCM-2024-118\", \"deviation_type\": \"temperature excursion\"}", "error": null, "latency_ms": 23.8, "input_tokens": 26, "output_tokens": 28, "cost_usd": 0.0, "scores": [{"scorer": "json_match", "score": 0.0, "passed": false, "detail": "0/3 fields (missed: product, batch_number, deviation_type)"}]}, {"model": "mock:weak", "dataset": "sop_extraction", "test_case_id": "ext-08", "repeat": 0, "output": "{\"product\": \"Unknown product\", \"batch_number\": \"N/A\", \"deviation_type\": \"deviation\"}", "error": null, "latency_ms": 94.8, "input_tokens": 26, "output_tokens": 21, "cost_usd": 0.0, "scores": [{"scorer": "json_match", "score": 0.0, "passed": false, "detail": "0/3 fields (missed: product, batch_number, deviation_type)"}]}, {"model": "mock:smart", "dataset": "sop_extraction", "test_case_id": "ext-09", "repeat": 0, "output": "{\"product\": \"Paracetamol 500mg Tablets\", \"batch_number\": \"PCM-2024-118\", \"deviation_type\": \"temperature excursion\"}", "error": null, "latency_ms": 30.7, "input_tokens": 32, "output_tokens": 28, "cost_usd": 0.0, "scores": [{"scorer": "json_match", "score": 0.0, "passed": false, "detail": "0/3 fields (missed: product, batch_number, deviation_type)"}]}, {"model": "mock:weak", "dataset": "sop_extraction", "test_case_id": "ext-09", "repeat": 0, "output": "{\"product\": \"Unknown product\", \"batch_number\": \"N/A\", \"deviation_type\": \"deviation\"}", "error": null, "latency_ms": 67.3, "input_tokens": 32, "output_tokens": 21, "cost_usd": 0.0, "scores": [{"scorer": "json_match", "score": 0.0, "passed": false, "detail": "0/3 fields (missed: product, batch_number, deviation_type)"}]}, {"model": "mock:smart", "dataset": "sop_extraction", "test_case_id": "ext-10", "repeat": 0, "output": "{\"product\": \"Paracetamol 500mg Tablets\", \"batch_number\": \"PCM-2024-118\", \"deviation_type\": \"temperature excursion\"}", "error": null, "latency_ms": 41.4, "input_tokens": 25, "output_tokens": 28, "cost_usd": 0.0, "scores": [{"scorer": "json_match", "score": 0.0, "passed": false, "detail": "0/3 fields (missed: product, batch_number, deviation_type)"}]}, {"model": "mock:weak", "dataset": "sop_extraction", "test_case_id": "ext-10", "repeat": 0, "output": "{\"product\": \"Unknown product\", \"batch_number\": \"N/A\", \"deviation_type\": \"deviation\"}", "error": null, "latency_ms": 97.2, "input_tokens": 25, "output_tokens": 21, "cost_usd": 0.0, "scores": [{"scorer": "json_match", "score": 0.0, "passed": false, "detail": "0/3 fields (missed: product, batch_number, deviation_type)"}]}]}</script>
+<script>
+(function () {
+  "use strict";
+  const DATA = JSON.parse(document.getElementById("run-data").textContent);
+  const AMBER = "#e8a33d", MUTED = "#8e9bad", LINE = "#28313f";
+  const palette = ["#e8a33d","#4cc38a","#5aa9e6","#c98bdb","#e5604d","#d9c46a","#7ad1c4","#b0b8c4"];
+  const hasChart = typeof Chart !== "undefined";
+  if (!hasChart) document.getElementById("nojs").hidden = false;
+
+  if (hasChart) {
+    Chart.defaults.color = MUTED;
+    Chart.defaults.borderColor = LINE;
+    Chart.defaults.font.family = "ui-monospace, monospace";
+    Chart.defaults.font.size = 11;
+
+    const board = DATA.leaderboard;
+    const colorFor = {};
+    board.forEach((m, i) => { colorFor[m.model] = palette[i % palette.length]; });
+
+    // Quality vs cost scatter (cost floored so free models still plot)
+    new Chart(document.getElementById("scatter"), {
+      type: "scatter",
+      data: {
+        datasets: board.map(m => ({
+          label: m.model,
+          data: [{ x: Math.max(m.total_cost_usd, 0.0001), y: m.mean_score * 100 }],
+          backgroundColor: colorFor[m.model],
+          pointRadius: 8, pointHoverRadius: 11,
+        })),
+      },
+      options: {
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: "bottom", labels: { boxWidth: 10, padding: 12 } },
+          tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.parsed.y.toFixed(1)}% @ $${c.parsed.x.toFixed(4)}` } },
+        },
+        scales: {
+          x: { title: { display: true, text: "total cost (USD, log)" }, type: "logarithmic" },
+          y: { title: { display: true, text: "mean score (%)" }, min: 0, max: 100 },
+        },
+      },
+    });
+
+    // Mean score per dataset (grouped bars)
+    const datasets = DATA.datasets;
+    const models = board.map(m => m.model);
+    new Chart(document.getElementById("byDataset"), {
+      type: "bar",
+      data: {
+        labels: datasets,
+        datasets: models.map(model => ({
+          label: model,
+          backgroundColor: colorFor[model],
+          data: datasets.map(ds => {
+            const cell = DATA.cells.find(c => c.model === model && c.dataset === ds);
+            return cell ? +(cell.mean_score * 100).toFixed(1) : 0;
+          }),
+        })),
+      },
+      options: {
+        maintainAspectRatio: false,
+        plugins: { legend: { position: "bottom", labels: { boxWidth: 10, padding: 12 } } },
+        scales: { y: { min: 0, max: 100, title: { display: true, text: "score (%)" } } },
+      },
+    });
+
+    // Mean latency bars
+    new Chart(document.getElementById("latency"), {
+      type: "bar",
+      data: {
+        labels: models,
+        datasets: [{
+          label: "mean latency (ms)",
+          data: board.map(m => Math.round(m.mean_latency_ms)),
+          backgroundColor: models.map(m => colorFor[m]),
+        }],
+      },
+      options: {
+        maintainAspectRatio: false,
+        indexAxis: "y",
+        plugins: { legend: { display: false } },
+        scales: { x: { title: { display: true, text: "ms" } } },
+      },
+    });
+  }
+
+  // ---- Sortable leaderboard table ----
+  const table = document.getElementById("board");
+  const tbody = table.querySelector("tbody");
+  const rows = Array.from(tbody.rows);
+  const numCols = { 2: true, 3: true, 4: true, 5: true, 6: true, 7: true };
+  table.querySelectorAll("th").forEach((th, idx) => {
+    th.addEventListener("click", () => {
+      const asc = !(th.dataset.asc === "true");
+      table.querySelectorAll("th").forEach(h => { h.classList.remove("active"); h.dataset.asc = ""; });
+      th.classList.add("active"); th.dataset.asc = String(asc);
+      const sorted = rows.slice().sort((a, b) => {
+        let av = a.cells[idx].textContent.replace(/[%$]/g, "").trim();
+        let bv = b.cells[idx].textContent.replace(/[%$]/g, "").trim();
+        if (numCols[idx]) { av = parseFloat(av) || 0; bv = parseFloat(bv) || 0; return asc ? av - bv : bv - av; }
+        return asc ? av.localeCompare(bv) : bv.localeCompare(av);
+      });
+      sorted.forEach(r => tbody.appendChild(r));
+    });
+  });
+
+  // ---- Per-case explorer ----
+  const recs = DATA.records;
+  const fModel = document.getElementById("fModel");
+  const fDataset = document.getElementById("fDataset");
+  const fStatus = document.getElementById("fStatus");
+  const fSearch = document.getElementById("fSearch");
+  const container = document.getElementById("records");
+
+  [...new Set(recs.map(r => r.model))].forEach(v => fModel.add(new Option(v, v)));
+  [...new Set(recs.map(r => r.dataset))].forEach(v => fDataset.add(new Option(v, v)));
+
+  function statusOf(r) {
+    if (r.error) return "error";
+    return r.scores[0] && r.scores[0].passed ? "pass" : "fail";
+  }
+  function esc(s) { const d = document.createElement("div"); d.textContent = s == null ? "" : String(s); return d.innerHTML; }
+
+  function render() {
+    const m = fModel.value, d = fDataset.value, s = fStatus.value, q = fSearch.value.toLowerCase();
+    const filtered = recs.filter(r => {
+      if (m && r.model !== m) return false;
+      if (d && r.dataset !== d) return false;
+      if (s && statusOf(r) !== s) return false;
+      if (q && !(`${r.test_case_id} ${r.output}`.toLowerCase().includes(q))) return false;
+      return true;
+    }).slice(0, 300);
+
+    if (!filtered.length) { container.innerHTML = '<p class="tag" style="color:var(--muted);font-family:var(--mono)">No matching records.</p>'; return; }
+
+    container.innerHTML = filtered.map(r => {
+      const st = statusOf(r);
+      const cls = st === "pass" ? "pass" : "fail";
+      const sc = r.scores[0] ? (r.scores[0].score * 100).toFixed(0) + "%" : "—";
+      const scoreLines = r.scores.map(x => `${x.scorer}: ${(x.score * 100).toFixed(0)}%${x.detail ? " — " + esc(x.detail) : ""}`).join("\n");
+      return `<details class="rec">
+        <summary>
+          <span class="model-cell">${esc(r.model)}</span>
+          <span class="tag">${esc(r.dataset)} · ${esc(r.test_case_id)}</span>
+          <span class="tag">${r.latency_ms} ms · $${r.cost_usd.toFixed(4)}</span>
+          <span class="score-badge ${cls}">${r.error ? "ERROR" : sc}</span>
+        </summary>
+        <div class="body">
+          <div class="field"><div class="lbl">Model output</div><pre>${r.error ? esc("⚠ " + r.error) : esc(r.output) || "<empty>"}</pre></div>
+          <div class="field"><div class="lbl">Scores</div><pre>${esc(scoreLines) || "—"}</pre></div>
+        </div>
+      </details>`;
+    }).join("");
+  }
+  [fModel, fDataset, fStatus].forEach(el => el.addEventListener("change", render));
+  fSearch.addEventListener("input", render);
+  render();
+})();
+</script>
+</body>
+</html>
