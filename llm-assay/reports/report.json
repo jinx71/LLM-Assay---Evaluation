@@ -1,0 +1,1105 @@
+{
+  "success": true,
+  "message": "Evaluated 2 model(s) across 2 dataset(s).",
+  "data": {
+    "meta": {
+      "models": [
+        "mock:smart",
+        "mock:weak"
+      ],
+      "judge": null,
+      "repeats": 1,
+      "concurrency": 6,
+      "total_evaluations": 50
+    },
+    "started_at": "2026-06-26T06:19:17.899332+00:00",
+    "finished_at": "2026-06-26T06:19:18.480354+00:00",
+    "duration_s": 0.581,
+    "datasets": [
+      "gmp_severity",
+      "sop_extraction"
+    ],
+    "leaderboard": [
+      {
+        "model": "mock:smart",
+        "evaluations": 25,
+        "mean_score": 0.2667,
+        "pass_rate": 0.24,
+        "mean_latency_ms": 36.5,
+        "p95_latency_ms": 49.0,
+        "total_cost_usd": 0.0,
+        "error_rate": 0.0
+      },
+      {
+        "model": "mock:weak",
+        "evaluations": 25,
+        "mean_score": 0.08,
+        "pass_rate": 0.08,
+        "mean_latency_ms": 83.1,
+        "p95_latency_ms": 110.4,
+        "total_cost_usd": 0.0,
+        "error_rate": 0.0
+      }
+    ],
+    "cells": [
+      {
+        "model": "mock:smart",
+        "dataset": "gmp_severity",
+        "evaluations": 15,
+        "mean_score": 0.4,
+        "pass_rate": 0.4,
+        "mean_latency_ms": 37.9,
+        "p95_latency_ms": 47.8,
+        "total_cost_usd": 0.0,
+        "error_rate": 0.0,
+        "scorer_means": {
+          "exact_match": 0.4
+        }
+      },
+      {
+        "model": "mock:smart",
+        "dataset": "sop_extraction",
+        "evaluations": 10,
+        "mean_score": 0.0667,
+        "pass_rate": 0.0,
+        "mean_latency_ms": 34.4,
+        "p95_latency_ms": 48.6,
+        "total_cost_usd": 0.0,
+        "error_rate": 0.0,
+        "scorer_means": {
+          "json_match": 0.0667
+        }
+      },
+      {
+        "model": "mock:weak",
+        "dataset": "gmp_severity",
+        "evaluations": 15,
+        "mean_score": 0.1333,
+        "pass_rate": 0.1333,
+        "mean_latency_ms": 80.1,
+        "p95_latency_ms": 108.6,
+        "total_cost_usd": 0.0,
+        "error_rate": 0.0,
+        "scorer_means": {
+          "exact_match": 0.1333
+        }
+      },
+      {
+        "model": "mock:weak",
+        "dataset": "sop_extraction",
+        "evaluations": 10,
+        "mean_score": 0.0,
+        "pass_rate": 0.0,
+        "mean_latency_ms": 87.6,
+        "p95_latency_ms": 110.7,
+        "total_cost_usd": 0.0,
+        "error_rate": 0.0,
+        "scorer_means": {
+          "json_match": 0.0
+        }
+      }
+    ],
+    "records": [
+      {
+        "model": "mock:smart",
+        "dataset": "gmp_severity",
+        "test_case_id": "sev-01",
+        "repeat": 0,
+        "output": "Critical",
+        "error": null,
+        "latency_ms": 43.1,
+        "input_tokens": 41,
+        "output_tokens": 2,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "exact_match",
+            "score": 1.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      {
+        "model": "mock:weak",
+        "dataset": "gmp_severity",
+        "test_case_id": "sev-01",
+        "repeat": 0,
+        "output": "Major",
+        "error": null,
+        "latency_ms": 45.1,
+        "input_tokens": 41,
+        "output_tokens": 1,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "exact_match",
+            "score": 0.0,
+            "passed": false,
+            "detail": "expected 'critical', got 'major'"
+          }
+        ]
+      },
+      {
+        "model": "mock:smart",
+        "dataset": "gmp_severity",
+        "test_case_id": "sev-02",
+        "repeat": 0,
+        "output": "Major",
+        "error": null,
+        "latency_ms": 37.7,
+        "input_tokens": 47,
+        "output_tokens": 1,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "exact_match",
+            "score": 0.0,
+            "passed": false,
+            "detail": "expected 'minor', got 'major'"
+          }
+        ]
+      },
+      {
+        "model": "mock:weak",
+        "dataset": "gmp_severity",
+        "test_case_id": "sev-02",
+        "repeat": 0,
+        "output": "Critical",
+        "error": null,
+        "latency_ms": 68.0,
+        "input_tokens": 47,
+        "output_tokens": 2,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "exact_match",
+            "score": 0.0,
+            "passed": false,
+            "detail": "expected 'minor', got 'critical'"
+          }
+        ]
+      },
+      {
+        "model": "mock:smart",
+        "dataset": "gmp_severity",
+        "test_case_id": "sev-03",
+        "repeat": 0,
+        "output": "Critical",
+        "error": null,
+        "latency_ms": 39.9,
+        "input_tokens": 46,
+        "output_tokens": 2,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "exact_match",
+            "score": 0.0,
+            "passed": false,
+            "detail": "expected 'major', got 'critical'"
+          }
+        ]
+      },
+      {
+        "model": "mock:weak",
+        "dataset": "gmp_severity",
+        "test_case_id": "sev-03",
+        "repeat": 0,
+        "output": "Critical",
+        "error": null,
+        "latency_ms": 107.8,
+        "input_tokens": 46,
+        "output_tokens": 2,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "exact_match",
+            "score": 0.0,
+            "passed": false,
+            "detail": "expected 'major', got 'critical'"
+          }
+        ]
+      },
+      {
+        "model": "mock:smart",
+        "dataset": "gmp_severity",
+        "test_case_id": "sev-04",
+        "repeat": 0,
+        "output": "Major",
+        "error": null,
+        "latency_ms": 28.0,
+        "input_tokens": 40,
+        "output_tokens": 1,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "exact_match",
+            "score": 0.0,
+            "passed": false,
+            "detail": "expected 'critical', got 'major'"
+          }
+        ]
+      },
+      {
+        "model": "mock:weak",
+        "dataset": "gmp_severity",
+        "test_case_id": "sev-04",
+        "repeat": 0,
+        "output": "Major",
+        "error": null,
+        "latency_ms": 110.4,
+        "input_tokens": 40,
+        "output_tokens": 1,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "exact_match",
+            "score": 0.0,
+            "passed": false,
+            "detail": "expected 'critical', got 'major'"
+          }
+        ]
+      },
+      {
+        "model": "mock:smart",
+        "dataset": "gmp_severity",
+        "test_case_id": "sev-05",
+        "repeat": 0,
+        "output": "Major",
+        "error": null,
+        "latency_ms": 25.1,
+        "input_tokens": 37,
+        "output_tokens": 1,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "exact_match",
+            "score": 0.0,
+            "passed": false,
+            "detail": "expected 'minor', got 'major'"
+          }
+        ]
+      },
+      {
+        "model": "mock:weak",
+        "dataset": "gmp_severity",
+        "test_case_id": "sev-05",
+        "repeat": 0,
+        "output": "Critical",
+        "error": null,
+        "latency_ms": 105.6,
+        "input_tokens": 37,
+        "output_tokens": 2,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "exact_match",
+            "score": 0.0,
+            "passed": false,
+            "detail": "expected 'minor', got 'critical'"
+          }
+        ]
+      },
+      {
+        "model": "mock:smart",
+        "dataset": "gmp_severity",
+        "test_case_id": "sev-06",
+        "repeat": 0,
+        "output": "Major",
+        "error": null,
+        "latency_ms": 36.4,
+        "input_tokens": 48,
+        "output_tokens": 1,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "exact_match",
+            "score": 1.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      {
+        "model": "mock:weak",
+        "dataset": "gmp_severity",
+        "test_case_id": "sev-06",
+        "repeat": 0,
+        "output": "Minor",
+        "error": null,
+        "latency_ms": 82.8,
+        "input_tokens": 48,
+        "output_tokens": 1,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "exact_match",
+            "score": 0.0,
+            "passed": false,
+            "detail": "expected 'major', got 'minor'"
+          }
+        ]
+      },
+      {
+        "model": "mock:smart",
+        "dataset": "gmp_severity",
+        "test_case_id": "sev-07",
+        "repeat": 0,
+        "output": "Critical",
+        "error": null,
+        "latency_ms": 36.9,
+        "input_tokens": 36,
+        "output_tokens": 2,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "exact_match",
+            "score": 1.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      {
+        "model": "mock:weak",
+        "dataset": "gmp_severity",
+        "test_case_id": "sev-07",
+        "repeat": 0,
+        "output": "Major",
+        "error": null,
+        "latency_ms": 88.8,
+        "input_tokens": 36,
+        "output_tokens": 1,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "exact_match",
+            "score": 0.0,
+            "passed": false,
+            "detail": "expected 'critical', got 'major'"
+          }
+        ]
+      },
+      {
+        "model": "mock:smart",
+        "dataset": "gmp_severity",
+        "test_case_id": "sev-08",
+        "repeat": 0,
+        "output": "Major",
+        "error": null,
+        "latency_ms": 36.7,
+        "input_tokens": 48,
+        "output_tokens": 1,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "exact_match",
+            "score": 1.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      {
+        "model": "mock:weak",
+        "dataset": "gmp_severity",
+        "test_case_id": "sev-08",
+        "repeat": 0,
+        "output": "Major",
+        "error": null,
+        "latency_ms": 92.1,
+        "input_tokens": 48,
+        "output_tokens": 1,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "exact_match",
+            "score": 1.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      {
+        "model": "mock:smart",
+        "dataset": "gmp_severity",
+        "test_case_id": "sev-09",
+        "repeat": 0,
+        "output": "Minor",
+        "error": null,
+        "latency_ms": 49.9,
+        "input_tokens": 40,
+        "output_tokens": 1,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "exact_match",
+            "score": 1.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      {
+        "model": "mock:weak",
+        "dataset": "gmp_severity",
+        "test_case_id": "sev-09",
+        "repeat": 0,
+        "output": "Major",
+        "error": null,
+        "latency_ms": 52.4,
+        "input_tokens": 40,
+        "output_tokens": 1,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "exact_match",
+            "score": 0.0,
+            "passed": false,
+            "detail": "expected 'minor', got 'major'"
+          }
+        ]
+      },
+      {
+        "model": "mock:smart",
+        "dataset": "gmp_severity",
+        "test_case_id": "sev-10",
+        "repeat": 0,
+        "output": "Critical",
+        "error": null,
+        "latency_ms": 44.8,
+        "input_tokens": 45,
+        "output_tokens": 2,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "exact_match",
+            "score": 1.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      {
+        "model": "mock:weak",
+        "dataset": "gmp_severity",
+        "test_case_id": "sev-10",
+        "repeat": 0,
+        "output": "Minor",
+        "error": null,
+        "latency_ms": 99.8,
+        "input_tokens": 45,
+        "output_tokens": 1,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "exact_match",
+            "score": 0.0,
+            "passed": false,
+            "detail": "expected 'critical', got 'minor'"
+          }
+        ]
+      },
+      {
+        "model": "mock:smart",
+        "dataset": "gmp_severity",
+        "test_case_id": "sev-11",
+        "repeat": 0,
+        "output": "Critical",
+        "error": null,
+        "latency_ms": 46.8,
+        "input_tokens": 40,
+        "output_tokens": 2,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "exact_match",
+            "score": 0.0,
+            "passed": false,
+            "detail": "expected 'major', got 'critical'"
+          }
+        ]
+      },
+      {
+        "model": "mock:weak",
+        "dataset": "gmp_severity",
+        "test_case_id": "sev-11",
+        "repeat": 0,
+        "output": "Critical",
+        "error": null,
+        "latency_ms": 48.3,
+        "input_tokens": 40,
+        "output_tokens": 2,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "exact_match",
+            "score": 0.0,
+            "passed": false,
+            "detail": "expected 'major', got 'critical'"
+          }
+        ]
+      },
+      {
+        "model": "mock:smart",
+        "dataset": "gmp_severity",
+        "test_case_id": "sev-12",
+        "repeat": 0,
+        "output": "Major",
+        "error": null,
+        "latency_ms": 45.0,
+        "input_tokens": 42,
+        "output_tokens": 1,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "exact_match",
+            "score": 0.0,
+            "passed": false,
+            "detail": "expected 'minor', got 'major'"
+          }
+        ]
+      },
+      {
+        "model": "mock:weak",
+        "dataset": "gmp_severity",
+        "test_case_id": "sev-12",
+        "repeat": 0,
+        "output": "Minor",
+        "error": null,
+        "latency_ms": 75.6,
+        "input_tokens": 42,
+        "output_tokens": 1,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "exact_match",
+            "score": 1.0,
+            "passed": true,
+            "detail": ""
+          }
+        ]
+      },
+      {
+        "model": "mock:smart",
+        "dataset": "gmp_severity",
+        "test_case_id": "sev-13",
+        "repeat": 0,
+        "output": "Minor",
+        "error": null,
+        "latency_ms": 43.3,
+        "input_tokens": 48,
+        "output_tokens": 1,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "exact_match",
+            "score": 0.0,
+            "passed": false,
+            "detail": "expected 'major', got 'minor'"
+          }
+        ]
+      },
+      {
+        "model": "mock:weak",
+        "dataset": "gmp_severity",
+        "test_case_id": "sev-13",
+        "repeat": 0,
+        "output": "Minor",
+        "error": null,
+        "latency_ms": 63.8,
+        "input_tokens": 48,
+        "output_tokens": 1,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "exact_match",
+            "score": 0.0,
+            "passed": false,
+            "detail": "expected 'major', got 'minor'"
+          }
+        ]
+      },
+      {
+        "model": "mock:smart",
+        "dataset": "gmp_severity",
+        "test_case_id": "sev-14",
+        "repeat": 0,
+        "output": "Major",
+        "error": null,
+        "latency_ms": 26.6,
+        "input_tokens": 43,
+        "output_tokens": 1,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "exact_match",
+            "score": 0.0,
+            "passed": false,
+            "detail": "expected 'minor', got 'major'"
+          }
+        ]
+      },
+      {
+        "model": "mock:weak",
+        "dataset": "gmp_severity",
+        "test_case_id": "sev-14",
+        "repeat": 0,
+        "output": "Major",
+        "error": null,
+        "latency_ms": 66.2,
+        "input_tokens": 43,
+        "output_tokens": 1,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "exact_match",
+            "score": 0.0,
+            "passed": false,
+            "detail": "expected 'minor', got 'major'"
+          }
+        ]
+      },
+      {
+        "model": "mock:smart",
+        "dataset": "gmp_severity",
+        "test_case_id": "sev-15",
+        "repeat": 0,
+        "output": "Minor",
+        "error": null,
+        "latency_ms": 27.6,
+        "input_tokens": 45,
+        "output_tokens": 1,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "exact_match",
+            "score": 0.0,
+            "passed": false,
+            "detail": "expected 'critical', got 'minor'"
+          }
+        ]
+      },
+      {
+        "model": "mock:weak",
+        "dataset": "gmp_severity",
+        "test_case_id": "sev-15",
+        "repeat": 0,
+        "output": "Major",
+        "error": null,
+        "latency_ms": 94.5,
+        "input_tokens": 45,
+        "output_tokens": 1,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "exact_match",
+            "score": 0.0,
+            "passed": false,
+            "detail": "expected 'critical', got 'major'"
+          }
+        ]
+      },
+      {
+        "model": "mock:smart",
+        "dataset": "sop_extraction",
+        "test_case_id": "ext-01",
+        "repeat": 0,
+        "output": "{\"product\": \"UNKNOWN\", \"batch_number\": \"PCM-2024-118\", \"deviation_type\": \"temperature excursion\"}",
+        "error": null,
+        "latency_ms": 29.9,
+        "input_tokens": 30,
+        "output_tokens": 24,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "json_match",
+            "score": 0.6666666666666666,
+            "passed": false,
+            "detail": "2/3 fields (missed: product)"
+          }
+        ]
+      },
+      {
+        "model": "mock:weak",
+        "dataset": "sop_extraction",
+        "test_case_id": "ext-01",
+        "repeat": 0,
+        "output": "{\"product\": \"Unknown product\", \"batch_number\": \"N/A\", \"deviation_type\": \"deviation\"}",
+        "error": null,
+        "latency_ms": 63.2,
+        "input_tokens": 30,
+        "output_tokens": 21,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "json_match",
+            "score": 0.0,
+            "passed": false,
+            "detail": "0/3 fields (missed: product, batch_number, deviation_type)"
+          }
+        ]
+      },
+      {
+        "model": "mock:smart",
+        "dataset": "sop_extraction",
+        "test_case_id": "ext-02",
+        "repeat": 0,
+        "output": "{\"product\": \"UNKNOWN\", \"batch_number\": \"UNKNOWN\", \"deviation_type\": \"temperature excursion\"}",
+        "error": null,
+        "latency_ms": 31.4,
+        "input_tokens": 35,
+        "output_tokens": 23,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "json_match",
+            "score": 0.0,
+            "passed": false,
+            "detail": "0/3 fields (missed: product, batch_number, deviation_type)"
+          }
+        ]
+      },
+      {
+        "model": "mock:weak",
+        "dataset": "sop_extraction",
+        "test_case_id": "ext-02",
+        "repeat": 0,
+        "output": "{\"product\": \"Unknown product\", \"batch_number\": \"UNKNOWN\", \"deviation_type\": \"deviation\"}",
+        "error": null,
+        "latency_ms": 80.5,
+        "input_tokens": 35,
+        "output_tokens": 22,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "json_match",
+            "score": 0.0,
+            "passed": false,
+            "detail": "0/3 fields (missed: product, batch_number, deviation_type)"
+          }
+        ]
+      },
+      {
+        "model": "mock:smart",
+        "dataset": "sop_extraction",
+        "test_case_id": "ext-03",
+        "repeat": 0,
+        "output": "{\"product\": \"Paracetamol 500mg Tablets\", \"batch_number\": \"PCM-2024-118\", \"deviation_type\": \"temperature excursion\"}",
+        "error": null,
+        "latency_ms": 30.8,
+        "input_tokens": 30,
+        "output_tokens": 28,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "json_match",
+            "score": 0.0,
+            "passed": false,
+            "detail": "0/3 fields (missed: product, batch_number, deviation_type)"
+          }
+        ]
+      },
+      {
+        "model": "mock:weak",
+        "dataset": "sop_extraction",
+        "test_case_id": "ext-03",
+        "repeat": 0,
+        "output": "{\"product\": \"Unknown product\", \"batch_number\": \"N/A\", \"deviation_type\": \"deviation\"}",
+        "error": null,
+        "latency_ms": 109.6,
+        "input_tokens": 30,
+        "output_tokens": 21,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "json_match",
+            "score": 0.0,
+            "passed": false,
+            "detail": "0/3 fields (missed: product, batch_number, deviation_type)"
+          }
+        ]
+      },
+      {
+        "model": "mock:smart",
+        "dataset": "sop_extraction",
+        "test_case_id": "ext-04",
+        "repeat": 0,
+        "output": "{\"product\": \"Paracetamol 500mg Tablets\", \"batch_number\": \"UNKNOWN\", \"deviation_type\": \"temperature excursion\"}",
+        "error": null,
+        "latency_ms": 23.0,
+        "input_tokens": 28,
+        "output_tokens": 27,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "json_match",
+            "score": 0.0,
+            "passed": false,
+            "detail": "0/3 fields (missed: product, batch_number, deviation_type)"
+          }
+        ]
+      },
+      {
+        "model": "mock:weak",
+        "dataset": "sop_extraction",
+        "test_case_id": "ext-04",
+        "repeat": 0,
+        "output": "{\"product\": \"Unknown product\", \"batch_number\": \"N/A\", \"deviation_type\": \"deviation\"}",
+        "error": null,
+        "latency_ms": 83.9,
+        "input_tokens": 28,
+        "output_tokens": 21,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "json_match",
+            "score": 0.0,
+            "passed": false,
+            "detail": "0/3 fields (missed: product, batch_number, deviation_type)"
+          }
+        ]
+      },
+      {
+        "model": "mock:smart",
+        "dataset": "sop_extraction",
+        "test_case_id": "ext-05",
+        "repeat": 0,
+        "output": "{\"product\": \"Paracetamol 500mg Tablets\", \"batch_number\": \"PCM-2024-118\", \"deviation_type\": \"UNKNOWN\"}",
+        "error": null,
+        "latency_ms": 49.2,
+        "input_tokens": 33,
+        "output_tokens": 25,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "json_match",
+            "score": 0.0,
+            "passed": false,
+            "detail": "0/3 fields (missed: product, batch_number, deviation_type)"
+          }
+        ]
+      },
+      {
+        "model": "mock:weak",
+        "dataset": "sop_extraction",
+        "test_case_id": "ext-05",
+        "repeat": 0,
+        "output": "{\"product\": \"Unknown product\", \"batch_number\": \"N/A\", \"deviation_type\": \"deviation\"}",
+        "error": null,
+        "latency_ms": 79.0,
+        "input_tokens": 33,
+        "output_tokens": 21,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "json_match",
+            "score": 0.0,
+            "passed": false,
+            "detail": "0/3 fields (missed: product, batch_number, deviation_type)"
+          }
+        ]
+      },
+      {
+        "model": "mock:smart",
+        "dataset": "sop_extraction",
+        "test_case_id": "ext-06",
+        "repeat": 0,
+        "output": "{\"product\": \"Paracetamol 500mg Tablets\", \"batch_number\": \"PCM-2024-118\", \"deviation_type\": \"temperature excursion\"}",
+        "error": null,
+        "latency_ms": 44.0,
+        "input_tokens": 23,
+        "output_tokens": 28,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "json_match",
+            "score": 0.0,
+            "passed": false,
+            "detail": "0/3 fields (missed: product, batch_number, deviation_type)"
+          }
+        ]
+      },
+      {
+        "model": "mock:weak",
+        "dataset": "sop_extraction",
+        "test_case_id": "ext-06",
+        "repeat": 0,
+        "output": "{\"product\": \"Unknown product\", \"batch_number\": \"N/A\", \"deviation_type\": \"deviation\"}",
+        "error": null,
+        "latency_ms": 110.2,
+        "input_tokens": 23,
+        "output_tokens": 21,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "json_match",
+            "score": 0.0,
+            "passed": false,
+            "detail": "0/3 fields (missed: product, batch_number, deviation_type)"
+          }
+        ]
+      },
+      {
+        "model": "mock:smart",
+        "dataset": "sop_extraction",
+        "test_case_id": "ext-07",
+        "repeat": 0,
+        "output": "{\"product\": \"Paracetamol 500mg Tablets\", \"batch_number\": \"PCM-2024-118\", \"deviation_type\": \"temperature excursion\"}",
+        "error": null,
+        "latency_ms": 25.7,
+        "input_tokens": 30,
+        "output_tokens": 28,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "json_match",
+            "score": 0.0,
+            "passed": false,
+            "detail": "0/3 fields (missed: product, batch_number, deviation_type)"
+          }
+        ]
+      },
+      {
+        "model": "mock:weak",
+        "dataset": "sop_extraction",
+        "test_case_id": "ext-07",
+        "repeat": 0,
+        "output": "{\"product\": \"Unknown product\", \"batch_number\": \"N/A\", \"deviation_type\": \"deviation\"}",
+        "error": null,
+        "latency_ms": 60.8,
+        "input_tokens": 30,
+        "output_tokens": 21,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "json_match",
+            "score": 0.0,
+            "passed": false,
+            "detail": "0/3 fields (missed: product, batch_number, deviation_type)"
+          }
+        ]
+      },
+      {
+        "model": "mock:smart",
+        "dataset": "sop_extraction",
+        "test_case_id": "ext-08",
+        "repeat": 0,
+        "output": "{\"product\": \"Paracetamol 500mg Tablets\", \"batch_number\": \"PCM-2024-118\", \"deviation_type\": \"temperature excursion\"}",
+        "error": null,
+        "latency_ms": 30.8,
+        "input_tokens": 26,
+        "output_tokens": 28,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "json_match",
+            "score": 0.0,
+            "passed": false,
+            "detail": "0/3 fields (missed: product, batch_number, deviation_type)"
+          }
+        ]
+      },
+      {
+        "model": "mock:weak",
+        "dataset": "sop_extraction",
+        "test_case_id": "ext-08",
+        "repeat": 0,
+        "output": "{\"product\": \"Unknown product\", \"batch_number\": \"N/A\", \"deviation_type\": \"deviation\"}",
+        "error": null,
+        "latency_ms": 111.2,
+        "input_tokens": 26,
+        "output_tokens": 21,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "json_match",
+            "score": 0.0,
+            "passed": false,
+            "detail": "0/3 fields (missed: product, batch_number, deviation_type)"
+          }
+        ]
+      },
+      {
+        "model": "mock:smart",
+        "dataset": "sop_extraction",
+        "test_case_id": "ext-09",
+        "repeat": 0,
+        "output": "{\"product\": \"Paracetamol 500mg Tablets\", \"batch_number\": \"PCM-2024-118\", \"deviation_type\": \"temperature excursion\"}",
+        "error": null,
+        "latency_ms": 31.8,
+        "input_tokens": 32,
+        "output_tokens": 28,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "json_match",
+            "score": 0.0,
+            "passed": false,
+            "detail": "0/3 fields (missed: product, batch_number, deviation_type)"
+          }
+        ]
+      },
+      {
+        "model": "mock:weak",
+        "dataset": "sop_extraction",
+        "test_case_id": "ext-09",
+        "repeat": 0,
+        "output": "{\"product\": \"Unknown product\", \"batch_number\": \"N/A\", \"deviation_type\": \"deviation\"}",
+        "error": null,
+        "latency_ms": 79.5,
+        "input_tokens": 32,
+        "output_tokens": 21,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "json_match",
+            "score": 0.0,
+            "passed": false,
+            "detail": "0/3 fields (missed: product, batch_number, deviation_type)"
+          }
+        ]
+      },
+      {
+        "model": "mock:smart",
+        "dataset": "sop_extraction",
+        "test_case_id": "ext-10",
+        "repeat": 0,
+        "output": "{\"product\": \"Paracetamol 500mg Tablets\", \"batch_number\": \"PCM-2024-118\", \"deviation_type\": \"temperature excursion\"}",
+        "error": null,
+        "latency_ms": 48.0,
+        "input_tokens": 25,
+        "output_tokens": 28,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "json_match",
+            "score": 0.0,
+            "passed": false,
+            "detail": "0/3 fields (missed: product, batch_number, deviation_type)"
+          }
+        ]
+      },
+      {
+        "model": "mock:weak",
+        "dataset": "sop_extraction",
+        "test_case_id": "ext-10",
+        "repeat": 0,
+        "output": "{\"product\": \"Unknown product\", \"batch_number\": \"N/A\", \"deviation_type\": \"deviation\"}",
+        "error": null,
+        "latency_ms": 98.4,
+        "input_tokens": 25,
+        "output_tokens": 21,
+        "cost_usd": 0.0,
+        "scores": [
+          {
+            "scorer": "json_match",
+            "score": 0.0,
+            "passed": false,
+            "detail": "0/3 fields (missed: product, batch_number, deviation_type)"
+          }
+        ]
+      }
+    ]
+  }
+}
