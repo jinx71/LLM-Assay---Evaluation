@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>LLM Assay — Evaluation Report</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --ink: #0b0e13;
+    --panel: #141a24;
+    --panel-2: #1b2330;
+    --line: #28313f;
+    --text: #e8eef6;
+    --muted: #8e9bad;
+    --faint: #5e6b7d;
+    --amber: #e8a33d;
+    --amber-dim: #6b5223;
+    --pass: #4cc38a;
+    --fail: #e5604d;
+    --mono: ui-monospace, "SFMono-Regular", "JetBrains Mono", "Menlo", monospace;
+    --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--ink);
+    color: var(--text);
+    font-family: var(--sans);
+    line-height: 1.5;
+    background-image:
+      linear-gradient(transparent 95%, rgba(232,163,61,0.04) 95%),
+      linear-gradient(90deg, transparent 95%, rgba(232,163,61,0.04) 95%);
+    background-size: 28px 28px;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 32px 20px 80px; }
+
+  header { border-bottom: 1px solid var(--line); padding-bottom: 22px; margin-bottom: 28px; }
+  .eyebrow {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.22em;
+    text-transform: uppercase; color: var(--amber); margin: 0 0 10px;
+  }
+  h1 { margin: 0; font-size: clamp(26px, 5vw, 40px); font-weight: 650; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); margin-top: 8px; font-size: 14px; }
+  .metabar {
+    display: flex; flex-wrap: wrap; gap: 18px 34px; margin-top: 18px;
+    font-family: var(--mono); font-size: 12.5px;
+  }
+  .metabar div span { color: var(--faint); display: block; font-size: 10.5px;
+    letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 3px; }
+  .metabar div b { color: var(--text); font-weight: 600; }
+
+  section { margin-top: 40px; }
+  h2 {
+    font-size: 13px; font-family: var(--mono); letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--muted); font-weight: 600;
+    margin: 0 0 16px; display: flex; align-items: center; gap: 12px;
+  }
+  h2::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+  /* Winner callout */
+  .winner {
+    display: grid; grid-template-columns: auto 1fr; gap: 22px; align-items: center;
+    background: linear-gradient(180deg, var(--panel-2), var(--panel));
+    border: 1px solid var(--amber-dim); border-radius: 14px; padding: 22px 24px;
+  }
+  .winner .medal {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em;
+    color: var(--amber); border: 1px solid var(--amber-dim); border-radius: 999px;
+    padding: 6px 12px; white-space: nowrap;
+  }
+  .winner .name { font-family: var(--mono); font-size: 20px; font-weight: 600; }
+  .winner .stats { display: flex; flex-wrap: wrap; gap: 6px 26px; margin-top: 8px;
+    font-family: var(--mono); font-size: 13px; color: var(--muted); }
+  .winner .stats b { color: var(--text); }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 760px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
+  .card h3 { margin: 0 0 12px; font-size: 13px; color: var(--text); font-weight: 600; }
+  .chart-box { position: relative; height: 280px; }
+
+  table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 13px; }
+  thead th {
+    text-align: right; color: var(--faint); font-weight: 600; font-size: 10.5px;
+    letter-spacing: 0.1em; text-transform: uppercase; padding: 0 12px 12px;
+    border-bottom: 1px solid var(--line); cursor: pointer; user-select: none;
+  }
+  thead th:first-child, tbody td:first-child { text-align: left; }
+  thead th.active { color: var(--amber); }
+  tbody td { padding: 11px 12px; border-bottom: 1px solid rgba(40,49,63,0.5); text-align: right; }
+  tbody tr:hover { background: rgba(232,163,61,0.04); }
+  .model-cell { color: var(--text); }
+  .rank { color: var(--faint); padding-right: 14px; }
+  .bar-cell { position: relative; }
+  .bar-cell .bar {
+    position: absolute; left: 12px; bottom: 6px; height: 3px;
+    background: var(--amber); border-radius: 2px; opacity: 0.7;
+  }
+  .pass { color: var(--pass); }
+  .fail { color: var(--fail); }
+
+  /* Record explorer */
+  .controls { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+  select, input[type="text"] {
+    background: var(--panel-2); color: var(--text); border: 1px solid var(--line);
+    border-radius: 8px; padding: 8px 10px; font-family: var(--mono); font-size: 12.5px;
+  }
+  input[type="text"] { flex: 1; min-width: 160px; }
+  .rec { border: 1px solid var(--line); border-radius: 10px; margin-bottom: 8px; overflow: hidden; }
+  .rec summary {
+    cursor: pointer; padding: 12px 14px; display: flex; flex-wrap: wrap; gap: 8px 16px;
+    align-items: center; font-family: var(--mono); font-size: 12.5px; list-style: none;
+  }
+  .rec summary::-webkit-details-marker { display: none; }
+  .rec summary .tag { color: var(--muted); }
+  .rec summary .score-badge { margin-left: auto; padding: 2px 9px; border-radius: 999px;
+    border: 1px solid var(--line); }
+  .rec .body { padding: 0 14px 14px; border-top: 1px solid var(--line); }
+  .rec .field { margin-top: 12px; }
+  .rec .field .lbl { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--faint); margin-bottom: 5px; }
+  .rec pre { margin: 0; white-space: pre-wrap; word-break: break-word;
+    background: var(--ink); border: 1px solid var(--line); border-radius: 8px;
+    padding: 11px 12px; font-family: var(--mono); font-size: 12.5px; color: var(--text); }
+
+  footer { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--line);
+    color: var(--faint); font-family: var(--mono); font-size: 11.5px; }
+  .nojs { color: var(--fail); font-family: var(--mono); font-size: 12px; }
+
+  :focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">LLM Assay · Evaluation Report</p>
+    <h1>Model leaderboard</h1>
+    <p class="sub">Quality, latency, and cost measured on domain tasks — ranked by mean score.</p>
+    <div class="metabar">
+      <div><span>Datasets</span><b>{{ run.datasets | join(', ') }}</b></div>
+      <div><span>Evaluations</span><b>{{ run.meta.total_evaluations }}</b></div>
+      <div><span>Repeats</span><b>{{ run.meta.repeats }}</b></div>
+      <div><span>Duration</span><b>{{ '%.1f' | format(run.duration_s) }}s</b></div>
+      {% if run.meta.judge %}<div><span>Judge</span><b>{{ run.meta.judge }}</b></div>{% endif %}
+    </div>
+  </header>
+
+  {% if run.leaderboard %}
+  {% set top = run.leaderboard[0] %}
+  <div class="winner">
+    <div class="medal">RANK 01</div>
+    <div>
+      <div class="name">{{ top.model }}</div>
+      <div class="stats">
+        <span>score <b>{{ '%.1f' | format(top.mean_score * 100) }}%</b></span>
+        <span>pass <b>{{ '%.1f' | format(top.pass_rate * 100) }}%</b></span>
+        <span>mean <b>{{ '%.0f' | format(top.mean_latency_ms) }} ms</b></span>
+        <span>cost <b>${{ '%.4f' | format(top.total_cost_usd) }}</b></span>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <section>
+    <h2>Quality vs cost</h2>
+    <div class="card">
+      <h3>Higher and to the left is better — most quality per dollar</h3>
+      <div class="chart-box"><canvas id="scatter"></canvas></div>
+      <p class="nojs" id="nojs" hidden>Charts need an internet connection to load Chart.js. The tables below work offline.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Leaderboard</h2>
+    <table id="board">
+      <thead>
+        <tr>
+          <th data-key="rank">#</th>
+          <th data-key="model" style="text-align:left">Model</th>
+          <th data-key="mean_score" class="active">Score</th>
+          <th data-key="pass_rate">Pass</th>
+          <th data-key="mean_latency_ms">Mean ms</th>
+          <th data-key="p95_latency_ms">p95 ms</th>
+          <th data-key="total_cost_usd">Cost $</th>
+          <th data-key="error_rate">Err</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in run.leaderboard %}
+        <tr>
+          <td class="rank">{{ loop.index }}</td>
+          <td class="model-cell" style="text-align:left">{{ m.model }}</td>
+          <td class="bar-cell">{{ '%.1f' | format(m.mean_score * 100) }}%<span class="bar" style="width:{{ (m.mean_score * 120) | round(1) }}px"></span></td>
+          <td>{{ '%.1f' | format(m.pass_rate * 100) }}%</td>
+          <td>{{ '%.0f' | format(m.mean_latency_ms) }}</td>
+          <td>{{ '%.0f' | format(m.p95_latency_ms) }}</td>
+          <td>{{ '%.4f' | format(m.total_cost_usd) }}</td>
+          <td class="{{ 'fail' if m.error_rate > 0 else 'pass' }}">{{ '%.0f' | format(m.error_rate * 100) }}%</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>By task</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>Mean score per dataset</h3>
+        <div class="chart-box"><canvas id="byDataset"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Mean latency (ms)</h3>
+        <div class="chart-box"><canvas id="latency"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Per-case explorer</h2>
+    <div class="controls">
+      <select id="fModel"><option value="">All models</option></select>
+      <select id="fDataset"><option value="">All datasets</option></select>
+      <select id="fStatus">
+        <option value="">All results</option>
+        <option value="pass">Passed only</option>
+        <option value="fail">Failed only</option>
+        <option value="error">Errors only</option>
+      </select>
+      <input type="text" id="fSearch" placeholder="Search case id or output…" />
+    </div>
+    <div id="records"></div>
+  </section>
+
+  <footer>
+    Generated {{ generated_at }} · LLM Assay · {{ run.meta.total_evaluations }} evaluations.
+    Mock-provider numbers are placeholders; supply real API keys for genuine results.
+  </footer>
+</div>
+
+<script id="run-data" type="application/json">{{ run_json | safe }}</script>
+<script>
+(function () {
+  "use strict";
+  const DATA = JSON.parse(document.getElementById("run-data").textContent);
+  const AMBER = "#e8a33d", MUTED = "#8e9bad", LINE = "#28313f";
+  const palette = ["#e8a33d","#4cc38a","#5aa9e6","#c98bdb","#e5604d","#d9c46a","#7ad1c4","#b0b8c4"];
+  const hasChart = typeof Chart !== "undefined";
+  if (!hasChart) document.getElementById("nojs").hidden = false;
+
+  if (hasChart) {
+    Chart.defaults.color = MUTED;
+    Chart.defaults.borderColor = LINE;
+    Chart.defaults.font.family = "ui-monospace, monospace";
+    Chart.defaults.font.size = 11;
+
+    const board = DATA.leaderboard;
+    const colorFor = {};
+    board.forEach((m, i) => { colorFor[m.model] = palette[i % palette.length]; });
+
+    // Quality vs cost scatter (cost floored so free models still plot)
+    new Chart(document.getElementById("scatter"), {
+      type: "scatter",
+      data: {
+        datasets: board.map(m => ({
+          label: m.model,
+          data: [{ x: Math.max(m.total_cost_usd, 0.0001), y: m.mean_score * 100 }],
+          backgroundColor: colorFor[m.model],
+          pointRadius: 8, pointHoverRadius: 11,
+        })),
+      },
+      options: {
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: "bottom", labels: { boxWidth: 10, padding: 12 } },
+          tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.parsed.y.toFixed(1)}% @ $${c.parsed.x.toFixed(4)}` } },
+        },
+        scales: {
+          x: { title: { display: true, text: "total cost (USD, log)" }, type: "logarithmic" },
+          y: { title: { display: true, text: "mean score (%)" }, min: 0, max: 100 },
+        },
+      },
+    });
+
+    // Mean score per dataset (grouped bars)
+    const datasets = DATA.datasets;
+    const models = board.map(m => m.model);
+    new Chart(document.getElementById("byDataset"), {
+      type: "bar",
+      data: {
+        labels: datasets,
+        datasets: models.map(model => ({
+          label: model,
+          backgroundColor: colorFor[model],
+          data: datasets.map(ds => {
+            const cell = DATA.cells.find(c => c.model === model && c.dataset === ds);
+            return cell ? +(cell.mean_score * 100).toFixed(1) : 0;
+          }),
+        })),
+      },
+      options: {
+        maintainAspectRatio: false,
+        plugins: { legend: { position: "bottom", labels: { boxWidth: 10, padding: 12 } } },
+        scales: { y: { min: 0, max: 100, title: { display: true, text: "score (%)" } } },
+      },
+    });
+
+    // Mean latency bars
+    new Chart(document.getElementById("latency"), {
+      type: "bar",
+      data: {
+        labels: models,
+        datasets: [{
+          label: "mean latency (ms)",
+          data: board.map(m => Math.round(m.mean_latency_ms)),
+          backgroundColor: models.map(m => colorFor[m]),
+        }],
+      },
+      options: {
+        maintainAspectRatio: false,
+        indexAxis: "y",
+        plugins: { legend: { display: false } },
+        scales: { x: { title: { display: true, text: "ms" } } },
+      },
+    });
+  }
+
+  // ---- Sortable leaderboard table ----
+  const table = document.getElementById("board");
+  const tbody = table.querySelector("tbody");
+  const rows = Array.from(tbody.rows);
+  const numCols = { 2: true, 3: true, 4: true, 5: true, 6: true, 7: true };
+  table.querySelectorAll("th").forEach((th, idx) => {
+    th.addEventListener("click", () => {
+      const asc = !(th.dataset.asc === "true");
+      table.querySelectorAll("th").forEach(h => { h.classList.remove("active"); h.dataset.asc = ""; });
+      th.classList.add("active"); th.dataset.asc = String(asc);
+      const sorted = rows.slice().sort((a, b) => {
+        let av = a.cells[idx].textContent.replace(/[%$]/g, "").trim();
+        let bv = b.cells[idx].textContent.replace(/[%$]/g, "").trim();
+        if (numCols[idx]) { av = parseFloat(av) || 0; bv = parseFloat(bv) || 0; return asc ? av - bv : bv - av; }
+        return asc ? av.localeCompare(bv) : bv.localeCompare(av);
+      });
+      sorted.forEach(r => tbody.appendChild(r));
+    });
+  });
+
+  // ---- Per-case explorer ----
+  const recs = DATA.records;
+  const fModel = document.getElementById("fModel");
+  const fDataset = document.getElementById("fDataset");
+  const fStatus = document.getElementById("fStatus");
+  const fSearch = document.getElementById("fSearch");
+  const container = document.getElementById("records");
+
+  [...new Set(recs.map(r => r.model))].forEach(v => fModel.add(new Option(v, v)));
+  [...new Set(recs.map(r => r.dataset))].forEach(v => fDataset.add(new Option(v, v)));
+
+  function statusOf(r) {
+    if (r.error) return "error";
+    return r.scores[0] && r.scores[0].passed ? "pass" : "fail";
+  }
+  function esc(s) { const d = document.createElement("div"); d.textContent = s == null ? "" : String(s); return d.innerHTML; }
+
+  function render() {
+    const m = fModel.value, d = fDataset.value, s = fStatus.value, q = fSearch.value.toLowerCase();
+    const filtered = recs.filter(r => {
+      if (m && r.model !== m) return false;
+      if (d && r.dataset !== d) return false;
+      if (s && statusOf(r) !== s) return false;
+      if (q && !(`${r.test_case_id} ${r.output}`.toLowerCase().includes(q))) return false;
+      return true;
+    }).slice(0, 300);
+
+    if (!filtered.length) { container.innerHTML = '<p class="tag" style="color:var(--muted);font-family:var(--mono)">No matching records.</p>'; return; }
+
+    container.innerHTML = filtered.map(r => {
+      const st = statusOf(r);
+      const cls = st === "pass" ? "pass" : "fail";
+      const sc = r.scores[0] ? (r.scores[0].score * 100).toFixed(0) + "%" : "—";
+      const scoreLines = r.scores.map(x => `${x.scorer}: ${(x.score * 100).toFixed(0)}%${x.detail ? " — " + esc(x.detail) : ""}`).join("\n");
+      return `<details class="rec">
+        <summary>
+          <span class="model-cell">${esc(r.model)}</span>
+          <span class="tag">${esc(r.dataset)} · ${esc(r.test_case_id)}</span>
+          <span class="tag">${r.latency_ms} ms · $${r.cost_usd.toFixed(4)}</span>
+          <span class="score-badge ${cls}">${r.error ? "ERROR" : sc}</span>
+        </summary>
+        <div class="body">
+          <div class="field"><div class="lbl">Model output</div><pre>${r.error ? esc("⚠ " + r.error) : esc(r.output) || "<empty>"}</pre></div>
+          <div class="field"><div class="lbl">Scores</div><pre>${esc(scoreLines) || "—"}</pre></div>
+        </div>
+      </details>`;
+    }).join("");
+  }
+  [fModel, fDataset, fStatus].forEach(el => el.addEventListener("change", render));
+  fSearch.addEventListener("input", render);
+  render();
+})();
+</script>
+</body>
+</html>
